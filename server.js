@@ -23,7 +23,7 @@ const CONFIG = {
 
 // Initialize Express app
 const app = express();
-
+app.set('trust proxy', 1);
 // Middleware setup
 app.use(cors({
     origin: CONFIG.CORS_ORIGINS,
@@ -362,7 +362,8 @@ async function startServer() {
         await logError(error, null, { phase: 'server startup' });
         process.exit(1);
     }
-}
+} 
+
 app.get('/', (req, res) => {
     res.send('Tracking server is running successfully!');
 });
