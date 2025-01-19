@@ -13,9 +13,7 @@ const CONFIG = {
     LOG_PATH: path.join(__dirname, 'logs'),
     MAX_REQUEST_SIZE: '1mb',
     CORS_ORIGINS: [
-        'http://127.0.0.1:5501',
-        'http://localhost:5501',
-        'http://127.0.0.1:3000'
+        'https://radiant-concha-b54632.netlify.app'
     ],
     RATE_LIMIT: {
         windowMs: 15 * 60 * 1000,
