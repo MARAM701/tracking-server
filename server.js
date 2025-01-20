@@ -62,7 +62,8 @@ const CSV_HEADERS = [
     { id: 'operating_system', title: 'Operating_System' },
     { id: 'device_type', title: 'Device_Type' },
     { id: 'consent_decision', title: 'Consent_Decision' },
-    { id: 'consent_timestamp', title: 'Consent_Timestamp' },
+    { id: 'consent_timestamp', title: 'Consent_Timestamp' }, 
+    { id: 'icon_timestamp', title: 'Icon_Timestamp' },  // Add this new line
     { id: 'permission_decision', title: 'Permission_Decision' },
     { id: 'decision_timestamp', title: 'Decision_Timestamp' },
     { id: 'survey_clicked', title: 'Survey_Clicked' },
@@ -234,7 +235,8 @@ function validateTrackingData(data) {
         operating_system: String(data.operating_system),
         device_type: String(data.device_type),
         consent_decision: String(data.consent_decision),
-        consent_timestamp: String(data.consent_timestamp),
+        consent_timestamp: String(data.consent_timestamp), 
+        icon_timestamp: String(data.icon_timestamp),  // Add this new line
         permission_decision: String(data.permission_decision),
         decision_timestamp: String(data.decision_timestamp),
         survey_clicked: Boolean(data.survey_clicked),
@@ -280,7 +282,8 @@ app.post('/track', async (req, res) => {
             operating_system: req.body.operating_system,
             device_type: req.body.device_type,
             consent_decision: req.body.consent_decision,
-            consent_timestamp: req.body.consent_timestamp,
+            consent_timestamp: req.body.consent_timestamp, 
+            icon_timestamp: req.body.icon_timestamp,  // Add this new line
             permission_decision: req.body.permission_decision,
             decision_timestamp: req.body.decision_timestamp,
             survey_clicked: req.body.survey_clicked,
