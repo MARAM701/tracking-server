@@ -64,6 +64,7 @@ const CSV_HEADERS = [
     { id: 'device_type', title: 'Device_Type' },
     { id: 'consent_decision', title: 'Consent_Decision' },
     { id: 'consent_timestamp', title: 'Consent_Timestamp' },
+    { id: 'action_counter', title: 'Action_Counter' }, // Added action_counter
     { id: 'decision', title: 'Permission_Decision' },
     { id: 'surveyClicked', title: 'Survey_Clicked' },
     { id: 'timestamp', title: 'Timestamp' }
@@ -192,6 +193,12 @@ function validateTrackingData(data) {
         errors.push('Consent timestamp is required');
     }
 
+    if (!data.action_counter) { // Added action_counter validation
+        errors.push('Action counter is required');
+    } else if (!Number.isInteger(Number(data.action_counter)) || Number(data.action_counter) < 1) {
+        errors.push('Action counter must be a positive integer');
+    }
+
     if (!data.decision) {
         errors.push('Decision is required');
     } else {
@@ -214,6 +221,7 @@ function validateTrackingData(data) {
         device_type: String(data.device_type),
         consent_decision: String(data.consent_decision),
         consent_timestamp: String(data.consent_timestamp),
+        action_counter: Number(data.action_counter), // Added action_counter to return object
         decision: String(data.decision),
         timestamp: new Date().toISOString(),
         surveyClicked: Boolean(data.surveyClicked)
