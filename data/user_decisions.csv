@@ -1,8 +1,0 @@
-Session_ID,User_ID,IP_Address,Browser,Operating_System,Device_Type,Consent_Decision,Consent_Timestamp,Action_Counter,Permission_Decision,Survey_Clicked,Timestamp
-
-session_1737298856099_5ytzvwqsi,user_1737294572982_e61b16y07,109.83.198.37,Chrome 131.0.0.0,MacOS,Desktop,Agree,2025-01-20T09:52:03.510Z,3,allow,false,2025-01-20T09:52:10.276Z
-session_1737298856099_5ytzvwqsi,user_1737294572982_e61b16y07,109.83.198.37,Chrome 131.0.0.0,MacOS,Desktop,Agree,2025-01-20T09:52:03.510Z,4,allow,true,2025-01-20T09:52:17.400Z
-session_1737298856099_5ytzvwqsi,user_1737294572982_e61b16y07,109.83.198.37,Chrome 131.0.0.0,MacOS,Desktop,Agree,2025-01-20T09:58:09.365Z,5,block,false,2025-01-20T09:58:14.821Z
-session_1737298856099_5ytzvwqsi,user_1737294572982_e61b16y07,109.83.198.37,Chrome 131.0.0.0,MacOS,Desktop,Agree,2025-01-20T09:58:09.365Z,6,block,true,2025-01-20T09:58:19.634Z
-session_1737298856099_5ytzvwqsi,user_1737294572982_e61b16y07,109.83.198.37,Chrome 131.0.0.0,MacOS,Desktop,Agree,2025-01-20T10:02:06.177Z,7,dismiss,false,2025-01-20T10:02:14.454Z
-session_1737298856099_5ytzvwqsi,user_1737294572982_e61b16y07,109.83.198.37,Chrome 131.0.0.0,MacOS,Desktop,Agree,2025-01-20T10:02:06.177Z,8,dismiss,true,2025-01-20T10:02:19.407Z
