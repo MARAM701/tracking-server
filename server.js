@@ -5,7 +5,7 @@ const path = require('path');
 const createCsvWriter = require('csv-writer').createObjectCsvWriter;
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
-const { Octokit } = require('@octokit/rest');  // Add Octokit requirement
+const { Octokit } = require('@octokit/rest');
 
 // Configuration
 const CONFIG = {
@@ -20,7 +20,6 @@ const CONFIG = {
         windowMs: 15 * 60 * 1000,
         max: 100
     },
-    // Add GitHub configuration
     GITHUB: {
         TOKEN: process.env.GITHUB_TOKEN,
         REPO: process.env.GITHUB_REPO,
@@ -41,7 +40,7 @@ app.use(cors({
     origin: CONFIG.CORS_ORIGINS,
     methods: ['POST', 'GET'],
     allowedHeaders: ['Content-Type'],
-    exposedHeaders: ['Content-Disposition'] // Important for CSV download
+    exposedHeaders: ['Content-Disposition']
 }));
 
 app.use(express.json({ limit: CONFIG.MAX_REQUEST_SIZE }));
@@ -56,17 +55,18 @@ app.use(morgan(':method :url :status :response-time ms'));
 
 // CSV Configuration
 const CSV_HEADERS = [
-    { id: 'sessionId', title: 'Session_ID' },
-    { id: 'userId', title: 'User_ID' },
-    { id: 'ip', title: 'IP_Address' },
+    { id: 'session_id', title: 'Session_ID' },
+    { id: 'user_id', title: 'User_ID' },
+    { id: 'ip_address', title: 'IP_Address' },
     { id: 'browser', title: 'Browser' },
-    { id: 'os', title: 'Operating_System' },
+    { id: 'operating_system', title: 'Operating_System' },
     { id: 'device_type', title: 'Device_Type' },
     { id: 'consent_decision', title: 'Consent_Decision' },
     { id: 'consent_timestamp', title: 'Consent_Timestamp' },
-    { id: 'decision', title: 'Permission_Decision' },
-    { id: 'surveyClicked', title: 'Survey_Clicked' },
-    { id: 'timestamp', title: 'Timestamp' }
+    { id: 'permission_decision', title: 'Permission_Decision' },
+    { id: 'decision_timestamp', title: 'Decision_Timestamp' },
+    { id: 'survey_clicked', title: 'Survey_Clicked' },
+    { id: 'survey_timestamp', title: 'Survey_Timestamp' }
 ];
 
 // Function to create new CSV writer
@@ -80,46 +80,6 @@ function createNewCsvWriter(append = true) {
 
 // Initialize CSV writer
 let csvWriter = createNewCsvWriter(true);
-
-// Add GitHub upload function
-async function uploadCSVToGitHub() {
-    try {
-        const content = await fs.readFile(CONFIG.CSV_PATH, 'utf8');
-        const base64Content = Buffer.from(content).toString('base64');
-        const [owner, repo] = CONFIG.GITHUB.REPO.split('/');
-
-        // Get current file SHA
-        let sha;
-        try {
-            const { data: fileData } = await octokit.repos.getContent({
-                owner,
-                repo,
-                path: CONFIG.GITHUB.FILE_PATH,
-                ref: CONFIG.GITHUB.BRANCH
-            });
-            sha = fileData.sha;
-        } catch (error) {
-            if (error.status !== 404) throw error;
-            // File doesn't exist yet, which is fine
-        }
-
-        // Create or update file
-        await octokit.repos.createOrUpdateFileContents({
-            owner,
-            repo,
-            path: CONFIG.GITHUB.FILE_PATH,
-            message: 'Update tracking data',
-            content: base64Content,
-            sha,
-            branch: CONFIG.GITHUB.BRANCH
-        });
-
-        console.log('Successfully uploaded CSV to GitHub');
-    } catch (error) {
-        console.error('Error uploading to GitHub:', error);
-        await logError(error, null, { phase: 'github upload' });
-    }
-}
 
 // Ensure required directories exist
 async function ensureDirectories() {
@@ -146,78 +106,43 @@ async function ensureDirectories() {
     }
 }
 
-// Validate tracking data
-function validateTrackingData(data) {
-    const errors = [];
+// GitHub upload function
+async function uploadCSVToGitHub() {
+    try {
+        const content = await fs.readFile(CONFIG.CSV_PATH, 'utf8');
+        const base64Content = Buffer.from(content).toString('base64');
+        const [owner, repo] = CONFIG.GITHUB.REPO.split('/');
 
-    if (!data.sessionId) {
-        errors.push('Session ID is required');
-    } else if (!/^session_\d+_[a-zA-Z0-9]+$/.test(data.sessionId)) {
-        errors.push('Invalid Session ID format');
-    }
-
-    if (!data.userId) {
-        errors.push('User ID is required');
-    } else if (!/^user_\d+_[a-zA-Z0-9]+$/.test(data.userId)) {
-        errors.push('Invalid User ID format');
-    }
-
-    if (!data.ip) {
-        errors.push('IP address is required');
-    } else if (data.ip.length > 45) {
-        errors.push('IP address too long');
-    }
-
-    if (!data.browser) {
-        errors.push('Browser information is required');
-    }
-
-    if (!data.os) {
-        errors.push('Operating System information is required');
-    }
-
-    if (!data.device_type) {
-        errors.push('Device type is required');
-    } else if (!['Desktop', 'Tablet', 'Mobile'].includes(data.device_type)) {
-        errors.push('Invalid device type. Must be Desktop, Tablet, or Mobile');
-    }
-
-    if (!data.consent_decision) {
-        errors.push('Consent decision is required');
-    } else if (!['Agree', 'Disagree'].includes(data.consent_decision)) {
-        errors.push('Invalid consent decision. Must be Agree or Disagree');
-    }
-
-    if (!data.consent_timestamp) {
-        errors.push('Consent timestamp is required');
-    }
-
-    if (!data.decision) {
-        errors.push('Decision is required');
-    } else {
-        const validDecisions = ['allow', 'block', 'dismiss'];
-        if (!validDecisions.includes(data.decision)) {
-            errors.push('Invalid decision value. Must be allow, block, or dismiss');
+        // Get current file SHA
+        let sha;
+        try {
+            const { data: fileData } = await octokit.repos.getContent({
+                owner,
+                repo,
+                path: CONFIG.GITHUB.FILE_PATH,
+                ref: CONFIG.GITHUB.BRANCH
+            });
+            sha = fileData.sha;
+        } catch (error) {
+            if (error.status !== 404) throw error;
         }
-    }
 
-    if (errors.length > 0) {
-        throw new Error(errors.join(', '));
-    }
+        // Create or update file
+        await octokit.repos.createOrUpdateFileContents({
+            owner,
+            repo,
+            path: CONFIG.GITHUB.FILE_PATH,
+            message: 'Update tracking data',
+            content: base64Content,
+            sha,
+            branch: CONFIG.GITHUB.BRANCH
+        });
 
-    return {
-        sessionId: String(data.sessionId),
-        userId: String(data.userId),
-        ip: String(data.ip).slice(0, 45),
-        browser: String(data.browser),
-        os: String(data.os),
-        device_type: String(data.device_type),
-        consent_decision: String(data.consent_decision),
-        consent_timestamp: String(data.consent_timestamp),
-        decision: String(data.decision),
-        timestamp: new Date().toISOString(),
-        surveyClicked: Boolean(data.surveyClicked)
-    };
+        console.log('Successfully uploaded CSV to GitHub');
+    } catch (error) {
+        console.error('Error uploading to GitHub:', error);
+        await logError(error, null, { phase: 'github upload' });
+    }
 }
 
 // Error logging function
@@ -238,7 +163,86 @@ async function logError(error, requestData = null, additionalInfo = {}) {
     }
 }
 
-// Get CSV data endpoint
+// Validate tracking data
+function validateTrackingData(data) {
+    const errors = [];
+
+    if (!data.session_id) {
+        errors.push('Session ID is required');
+    } else if (!/^session_\d+_[a-zA-Z0-9]+$/.test(data.session_id)) {
+        errors.push('Invalid Session ID format');
+    }
+
+    if (!data.user_id) {
+        errors.push('User ID is required');
+    } else if (!/^user_\d+_[a-zA-Z0-9]+$/.test(data.user_id)) {
+        errors.push('Invalid User ID format');
+    }
+
+    if (!data.ip_address) {
+        errors.push('IP address is required');
+    } else if (data.ip_address.length > 45) {
+        errors.push('IP address too long');
+    }
+
+    if (!data.browser) {
+        errors.push('Browser information is required');
+    }
+
+    if (!data.operating_system) {
+        errors.push('Operating System information is required');
+    }
+
+    if (!data.device_type) {
+        errors.push('Device type is required');
+    } else if (!['Desktop', 'Tablet', 'Mobile'].includes(data.device_type)) {
+        errors.push('Invalid device type. Must be Desktop, Tablet, or Mobile');
+    }
+
+    if (!data.consent_decision) {
+        errors.push('Consent decision is required');
+    } else if (!['Agree', 'Disagree'].includes(data.consent_decision)) {
+        errors.push('Invalid consent decision. Must be Agree or Disagree');
+    }
+
+    if (!data.consent_timestamp) {
+        errors.push('Consent timestamp is required');
+    }
+
+    if (!data.permission_decision) {
+        errors.push('Permission decision is required');
+    } else {
+        const validDecisions = ['allow', 'block', 'dismiss'];
+        if (!validDecisions.includes(data.permission_decision)) {
+            errors.push('Invalid permission decision value. Must be allow, block, or dismiss');
+        }
+    }
+
+    if (!data.decision_timestamp) {
+        errors.push('Decision timestamp is required');
+    }
+
+    if (errors.length > 0) {
+        throw new Error(errors.join(', '));
+    }
+
+    return {
+        session_id: String(data.session_id),
+        user_id: String(data.user_id),
+        ip_address: String(data.ip_address).slice(0, 45),
+        browser: String(data.browser),
+        operating_system: String(data.operating_system),
+        device_type: String(data.device_type),
+        consent_decision: String(data.consent_decision),
+        consent_timestamp: String(data.consent_timestamp),
+        permission_decision: String(data.permission_decision),
+        decision_timestamp: String(data.decision_timestamp),
+        survey_clicked: Boolean(data.survey_clicked),
+        survey_timestamp: data.survey_clicked ? String(data.survey_timestamp) : false
+    };
+}
+
+// Endpoints
 app.get('/data', async (req, res) => {
     try {
         const fileExists = await fs.access(CONFIG.CSV_PATH)
@@ -266,24 +270,25 @@ app.get('/data', async (req, res) => {
     }
 });
 
-// Track endpoint - modified to include GitHub upload
 app.post('/track', async (req, res) => {
     try {
         console.log('Received tracking request:', {
-            sessionId: req.body.sessionId,
-            userId: req.body.userId,
+            session_id: req.body.session_id,
+            user_id: req.body.user_id,
+            ip_address: req.body.ip_address,
             browser: req.body.browser,
-            os: req.body.os,
+            operating_system: req.body.operating_system,
             device_type: req.body.device_type,
             consent_decision: req.body.consent_decision,
             consent_timestamp: req.body.consent_timestamp,
-            decision: req.body.decision,
-            surveyClicked: req.body.surveyClicked
+            permission_decision: req.body.permission_decision,
+            decision_timestamp: req.body.decision_timestamp,
+            survey_clicked: req.body.survey_clicked,
+            survey_timestamp: req.body.survey_timestamp
         });
 
         const validatedData = validateTrackingData(req.body);
 
-        // Write to CSV with retry logic
         let retries = 3;
         let success = false;
         while (retries > 0 && !success) {
@@ -297,26 +302,13 @@ app.post('/track', async (req, res) => {
             }
         }
 
-        // Add GitHub upload after successful CSV write
         await uploadCSVToGitHub();
 
-        console.log('Tracking data recorded successfully:', {
-            sessionId: validatedData.sessionId,
-            userId: validatedData.userId,
-            ip: validatedData.ip,
-            browser: validatedData.browser,
-            os: validatedData.os,
-            device_type: validatedData.device_type,
-            consent_decision: validatedData.consent_decision,
-            consent_timestamp: validatedData.consent_timestamp,
-            decision: validatedData.decision,
-            surveyClicked: validatedData.surveyClicked
-        });
+        console.log('Tracking data recorded successfully:', validatedData);
 
         res.status(200).json({
             success: true,
-            message: 'Decision recorded and uploaded to GitHub successfully',
-            timestamp: validatedData.timestamp
+            message: 'Decision recorded and uploaded to GitHub successfully'
         });
 
     } catch (error) {
@@ -335,7 +327,6 @@ app.post('/track', async (req, res) => {
     }
 });
 
-// Health check endpoint
 app.get('/health', async (req, res) => {
     try {
         await fs.access(CONFIG.CSV_PATH);
@@ -353,6 +344,10 @@ app.get('/health', async (req, res) => {
             error: 'Could not access required files'
         });
     }
+});
+
+app.get('/', (req, res) => {
+    res.send('Tracking server is running successfully!');
 });
 
 // Error handling middleware
@@ -413,9 +408,4 @@ async function startServer() {
     }
 }
 
-app.get('/', (req, res) => {
-    res.send('Tracking server is running successfully!');
-});
-
-// Start the server
 startServer();
