@@ -3,3 +3,4 @@ Session_ID,User_ID,IP_Address,Browser,Operating_System,Device_Type,Consent_Decis
 session_1737298856099_5ytzvwqsi,user_1737294572982_e61b16y07,109.83.198.37,Chrome 131.0.0.0,MacOS,Desktop,Agree,2025-01-20T10:25:21.100Z,allow,false,2025-01-20T10:25:27.368Z
 session_1737298856099_5ytzvwqsi,user_1737294572982_e61b16y07,109.83.198.37,Chrome 131.0.0.0,MacOS,Desktop,Agree,2025-01-20T10:25:21.100Z,allow,true,2025-01-20T10:25:33.312Z
 session_1737298856099_5ytzvwqsi,user_1737294572982_e61b16y07,109.83.198.37,Chrome 131.0.0.0,MacOS,Desktop,Agree,2025-01-20T10:27:07.078Z,block,false,2025-01-20T10:27:13.048Z
+session_1737298856099_5ytzvwqsi,user_1737294572982_e61b16y07,109.83.198.37,Chrome 131.0.0.0,MacOS,Desktop,Agree,2025-01-20T10:27:07.078Z,block,true,2025-01-20T10:27:20.887Z
