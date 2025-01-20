@@ -5,6 +5,7 @@ const path = require('path');
 const createCsvWriter = require('csv-writer').createObjectCsvWriter;
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
+const { Octokit } = require('@octokit/rest');  // Add Octokit requirement
 
 // Configuration
 const CONFIG = {
@@ -18,12 +19,23 @@ const CONFIG = {
     RATE_LIMIT: {
         windowMs: 15 * 60 * 1000,
         max: 100
+    },
+    // Add GitHub configuration
+    GITHUB: {
+        TOKEN: process.env.GITHUB_TOKEN,
+        REPO: process.env.GITHUB_REPO,
+        BRANCH: process.env.GITHUB_BRANCH,
+        FILE_PATH: process.env.CSV_FILE_PATH
     }
 };
 
 // Initialize Express app
 const app = express();
 app.set('trust proxy', 1);
+
+// Initialize GitHub client
+const octokit = new Octokit({ auth: CONFIG.GITHUB.TOKEN });
+
 // Middleware setup
 app.use(cors({
     origin: CONFIG.CORS_ORIGINS,
@@ -44,7 +56,7 @@ app.use(morgan(':method :url :status :response-time ms'));
 
 // CSV Configuration
 const CSV_HEADERS = [
-    { id: 'sessionId', title: 'Session_ID' },    // Added sessionId header
+    { id: 'sessionId', title: 'Session_ID' },
     { id: 'userId', title: 'User_ID' },
     { id: 'ip', title: 'IP_Address' },
     { id: 'browser', title: 'Browser' },
@@ -69,26 +81,61 @@ function createNewCsvWriter(append = true) {
 // Initialize CSV writer
 let csvWriter = createNewCsvWriter(true);
 
+// Add GitHub upload function
+async function uploadCSVToGitHub() {
+    try {
+        const content = await fs.readFile(CONFIG.CSV_PATH, 'utf8');
+        const base64Content = Buffer.from(content).toString('base64');
+        const [owner, repo] = CONFIG.GITHUB.REPO.split('/');
+
+        // Get current file SHA
+        let sha;
+        try {
+            const { data: fileData } = await octokit.repos.getContent({
+                owner,
+                repo,
+                path: CONFIG.GITHUB.FILE_PATH,
+                ref: CONFIG.GITHUB.BRANCH
+            });
+            sha = fileData.sha;
+        } catch (error) {
+            if (error.status !== 404) throw error;
+            // File doesn't exist yet, which is fine
+        }
+
+        // Create or update file
+        await octokit.repos.createOrUpdateFileContents({
+            owner,
+            repo,
+            path: CONFIG.GITHUB.FILE_PATH,
+            message: 'Update tracking data',
+            content: base64Content,
+            sha,
+            branch: CONFIG.GITHUB.BRANCH
+        });
+
+        console.log('Successfully uploaded CSV to GitHub');
+    } catch (error) {
+        console.error('Error uploading to GitHub:', error);
+        await logError(error, null, { phase: 'github upload' });
+    }
+}
+
 // Ensure required directories exist
 async function ensureDirectories() {
     try {
-        // Create directories if they don't exist
         await fs.mkdir(path.dirname(CONFIG.CSV_PATH), { recursive: true });
         await fs.mkdir(CONFIG.LOG_PATH, { recursive: true });
         
-        // Check if CSV file exists
         try {
             await fs.access(CONFIG.CSV_PATH);
-            // File exists, check if it's empty
             const stats = await fs.stat(CONFIG.CSV_PATH);
             if (stats.size === 0) {
-                // Empty file, write headers
                 csvWriter = createNewCsvWriter(false);
                 await csvWriter.writeRecords([]);
                 console.log('Created new CSV file with headers');
             }
         } catch {
-            // File doesn't exist, create new with headers
             csvWriter = createNewCsvWriter(false);
             await csvWriter.writeRecords([]);
             console.log('Created new CSV file with headers');
@@ -103,7 +150,6 @@ async function ensureDirectories() {
 function validateTrackingData(data) {
     const errors = [];
 
-    // Add session ID validation
     if (!data.sessionId) {
         errors.push('Session ID is required');
     } else if (!/^session_\d+_[a-zA-Z0-9]+$/.test(data.sessionId)) {
@@ -160,7 +206,7 @@ function validateTrackingData(data) {
     }
 
     return {
-        sessionId: String(data.sessionId),    // Added sessionId to returned data
+        sessionId: String(data.sessionId),
         userId: String(data.userId),
         ip: String(data.ip).slice(0, 45),
         browser: String(data.browser),
@@ -192,7 +238,7 @@ async function logError(error, requestData = null, additionalInfo = {}) {
     }
 }
 
-// New endpoint to get CSV data with headers
+// Get CSV data endpoint
 app.get('/data', async (req, res) => {
     try {
         const fileExists = await fs.access(CONFIG.CSV_PATH)
@@ -220,11 +266,11 @@ app.get('/data', async (req, res) => {
     }
 });
 
-// Track endpoint
+// Track endpoint - modified to include GitHub upload
 app.post('/track', async (req, res) => {
     try {
         console.log('Received tracking request:', {
-            sessionId: req.body.sessionId,    // Added sessionId to logging
+            sessionId: req.body.sessionId,
             userId: req.body.userId,
             browser: req.body.browser,
             os: req.body.os,
@@ -251,8 +297,11 @@ app.post('/track', async (req, res) => {
             }
         }
 
+        // Add GitHub upload after successful CSV write
+        await uploadCSVToGitHub();
+
         console.log('Tracking data recorded successfully:', {
-            sessionId: validatedData.sessionId,    // Added sessionId to success logging
+            sessionId: validatedData.sessionId,
             userId: validatedData.userId,
             ip: validatedData.ip,
             browser: validatedData.browser,
@@ -266,7 +315,7 @@ app.post('/track', async (req, res) => {
 
         res.status(200).json({
             success: true,
-            message: 'Decision recorded successfully',
+            message: 'Decision recorded and uploaded to GitHub successfully',
             timestamp: validatedData.timestamp
         });
 
@@ -362,7 +411,7 @@ async function startServer() {
         await logError(error, null, { phase: 'server startup' });
         process.exit(1);
     }
-} 
+}
 
 app.get('/', (req, res) => {
     res.send('Tracking server is running successfully!');
