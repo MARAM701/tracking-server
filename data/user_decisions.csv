@@ -1,3 +1,4 @@
 Session_ID,User_ID,IP_Address,Browser,Operating_System,Device_Type,Consent_Decision,Consent_Timestamp,Icon_Timestamp,Permission_Decision,Decision_Timestamp,Survey_Clicked,Survey_Timestamp
 
 session_1737368975497_kytbfz87b,user_1737294572982_e61b16y07,109.83.198.37,Chrome 131.0.0.0,MacOS,Desktop,Agree,2025-01-20T12:28:07.545Z,2025-01-20T12:28:13.951Z,allow,2025-01-20T12:28:17.680Z,false,false
+session_1737368975497_kytbfz87b,user_1737294572982_e61b16y07,109.83.198.37,Chrome 131.0.0.0,MacOS,Desktop,Agree,2025-01-20T12:28:07.545Z,2025-01-20T12:28:13.951Z,allow,2025-01-20T12:28:17.680Z,true,2025-01-20T12:28:30.604Z
