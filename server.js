@@ -7,6 +7,7 @@ const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
 const { Octokit } = require('@octokit/rest');
 
+// Configuration
 const CONFIG = {
     PORT: process.env.PORT || 3000,
     CSV_PATH: path.join(__dirname, 'data', 'user_decisions.csv'),
@@ -27,11 +28,14 @@ const CONFIG = {
     }
 };
 
+// Initialize Express app
 const app = express();
 app.set('trust proxy', 1);
 
+// Initialize GitHub client
 const octokit = new Octokit({ auth: CONFIG.GITHUB.TOKEN });
 
+// Middleware setup
 app.use(cors({
     origin: CONFIG.CORS_ORIGINS,
     methods: ['POST', 'GET'],
@@ -42,11 +46,14 @@ app.use(cors({
 app.use(express.json({ limit: CONFIG.MAX_REQUEST_SIZE }));
 app.use(express.static('public'));
 
+// Rate limiting
 const limiter = rateLimit(CONFIG.RATE_LIMIT);
 app.use('/track', limiter);
 
+// Request logging
 app.use(morgan(':method :url :status :response-time ms'));
 
+// CSV Configuration
 const CSV_HEADERS = [
     { id: 'session_id', title: 'Session_ID' },
     { id: 'user_id', title: 'User_ID' },
@@ -55,26 +62,15 @@ const CSV_HEADERS = [
     { id: 'operating_system', title: 'Operating_System' },
     { id: 'device_type', title: 'Device_Type' },
     { id: 'consent_decision', title: 'Consent_Decision' },
-    { id: 'consent_timestamp', title: 'Consent_Timestamp' },
-    { id: 'icon_timestamp', title: 'Icon_Timestamp' },
+    { id: 'consent_timestamp', title: 'Consent_Timestamp' }, 
+    { id: 'icon_timestamp', title: 'Icon_Timestamp' },  // Add this new line
     { id: 'permission_decision', title: 'Permission_Decision' },
     { id: 'decision_timestamp', title: 'Decision_Timestamp' },
-    { id: 'decision_time_taken_sec', title: 'Decision_Time_Taken_Sec' },
     { id: 'survey_clicked', title: 'Survey_Clicked' },
     { id: 'survey_timestamp', title: 'Survey_Timestamp' }
 ];
 
-function calculateDecisionTime(iconTimestamp, decisionTimestamp) {
-    try {
-        const startTime = new Date(iconTimestamp).getTime();
-        const endTime = new Date(decisionTimestamp).getTime();
-        return ((endTime - startTime) / 1000);
-    } catch (error) {
-        console.error('Error calculating decision time:', error);
-        return null;
-    }
-}
-
+// Function to create new CSV writer
 function createNewCsvWriter(append = true) {
     return createCsvWriter({
         path: CONFIG.CSV_PATH,
@@ -83,8 +79,10 @@ function createNewCsvWriter(append = true) {
     });
 }
 
+// Initialize CSV writer
 let csvWriter = createNewCsvWriter(true);
 
+// Ensure required directories exist
 async function ensureDirectories() {
     try {
         await fs.mkdir(path.dirname(CONFIG.CSV_PATH), { recursive: true });
@@ -109,12 +107,14 @@ async function ensureDirectories() {
     }
 }
 
+// GitHub upload function
 async function uploadCSVToGitHub() {
     try {
         const content = await fs.readFile(CONFIG.CSV_PATH, 'utf8');
         const base64Content = Buffer.from(content).toString('base64');
         const [owner, repo] = CONFIG.GITHUB.REPO.split('/');
 
+        // Get current file SHA
         let sha;
         try {
             const { data: fileData } = await octokit.repos.getContent({
@@ -128,6 +128,7 @@ async function uploadCSVToGitHub() {
             if (error.status !== 404) throw error;
         }
 
+        // Create or update file
         await octokit.repos.createOrUpdateFileContents({
             owner,
             repo,
@@ -145,6 +146,7 @@ async function uploadCSVToGitHub() {
     }
 }
 
+// Error logging function
 async function logError(error, requestData = null, additionalInfo = {}) {
     const errorLog = {
         timestamp: new Date().toISOString(),
@@ -162,6 +164,7 @@ async function logError(error, requestData = null, additionalInfo = {}) {
     }
 }
 
+// Validate tracking data
 function validateTrackingData(data) {
     const errors = [];
 
@@ -224,8 +227,6 @@ function validateTrackingData(data) {
         throw new Error(errors.join(', '));
     }
 
-    const decisionTime = calculateDecisionTime(data.icon_timestamp, data.decision_timestamp);
-
     return {
         session_id: String(data.session_id),
         user_id: String(data.user_id),
@@ -234,16 +235,16 @@ function validateTrackingData(data) {
         operating_system: String(data.operating_system),
         device_type: String(data.device_type),
         consent_decision: String(data.consent_decision),
-        consent_timestamp: String(data.consent_timestamp),
-        icon_timestamp: String(data.icon_timestamp),
+        consent_timestamp: String(data.consent_timestamp), 
+        icon_timestamp: String(data.icon_timestamp),  // Add this new line
         permission_decision: String(data.permission_decision),
         decision_timestamp: String(data.decision_timestamp),
-        decision_time_taken_sec: decisionTime,
         survey_clicked: Boolean(data.survey_clicked),
         survey_timestamp: data.survey_clicked ? String(data.survey_timestamp) : false
     };
 }
 
+// Endpoints
 app.get('/data', async (req, res) => {
     try {
         const fileExists = await fs.access(CONFIG.CSV_PATH)
@@ -281,8 +282,8 @@ app.post('/track', async (req, res) => {
             operating_system: req.body.operating_system,
             device_type: req.body.device_type,
             consent_decision: req.body.consent_decision,
-            consent_timestamp: req.body.consent_timestamp,
-            icon_timestamp: req.body.icon_timestamp,
+            consent_timestamp: req.body.consent_timestamp, 
+            icon_timestamp: req.body.icon_timestamp,  // Add this new line
             permission_decision: req.body.permission_decision,
             decision_timestamp: req.body.decision_timestamp,
             survey_clicked: req.body.survey_clicked,
@@ -352,6 +353,7 @@ app.get('/', (req, res) => {
     res.send('Tracking server is running successfully!');
 });
 
+// Error handling middleware
 app.use((err, req, res, next) => {
     console.error('Unhandled error:', err);
     logError(err, req.body, {
@@ -367,6 +369,7 @@ app.use((err, req, res, next) => {
     });
 });
 
+// Process error handling
 process.on('unhandledRejection', async (error) => {
     console.error('Unhandled Promise Rejection:', error);
     await logError(error, null, { type: 'unhandledRejection' });
@@ -378,6 +381,7 @@ process.on('uncaughtException', async (error) => {
     process.exit(1);
 });
 
+// Server initialization
 async function startServer() {
     try {
         await ensureDirectories();
