@@ -65,11 +65,21 @@ const CSV_HEADERS = [
     { id: 'consent_timestamp', title: 'Consent_Timestamp' }, 
     { id: 'icon_timestamp', title: 'Icon_Timestamp' },  // Add this new line
     { id: 'permission_decision', title: 'Permission_Decision' },
-    { id: 'decision_timestamp', title: 'Decision_Timestamp' },
+    { id: 'decision_timestamp', title: 'Decision_Timestamp' }, 
+    { id: 'decision_time_taken_sec', title: 'Decision_Time_Taken_Sec' },
     { id: 'survey_clicked', title: 'Survey_Clicked' },
     { id: 'survey_timestamp', title: 'Survey_Timestamp' }
 ];
-
+function calculateDecisionTime(iconTimestamp, decisionTimestamp) {
+    try {
+        const startTime = new Date(iconTimestamp).getTime();
+        const endTime = new Date(decisionTimestamp).getTime();
+        return (endTime - startTime) / 1000; // Returns seconds with full precision
+    } catch (error) {
+        console.error('Error calculating decision time:', error);
+        return null;
+    }
+}
 // Function to create new CSV writer
 function createNewCsvWriter(append = true) {
     return createCsvWriter({
@@ -226,7 +236,7 @@ function validateTrackingData(data) {
     if (errors.length > 0) {
         throw new Error(errors.join(', '));
     }
-
+    const decisionTime = calculateDecisionTime(data.icon_timestamp, data.decision_timestamp);
     return {
         session_id: String(data.session_id),
         user_id: String(data.user_id),
@@ -238,7 +248,8 @@ function validateTrackingData(data) {
         consent_timestamp: String(data.consent_timestamp), 
         icon_timestamp: String(data.icon_timestamp),  // Add this new line
         permission_decision: String(data.permission_decision),
-        decision_timestamp: String(data.decision_timestamp),
+        decision_timestamp: String(data.decision_timestamp), 
+        decision_time_taken_sec: decisionTime,
         survey_clicked: Boolean(data.survey_clicked),
         survey_timestamp: data.survey_clicked ? String(data.survey_timestamp) : false
     };
