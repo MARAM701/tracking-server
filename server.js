@@ -251,7 +251,7 @@ function validateTrackingData(data) {
         decision_timestamp: String(data.decision_timestamp), 
         decision_time_taken_sec: decisionTime,
         survey_clicked: Boolean(data.survey_clicked),
-        survey_timestamp: data.survey_clicked ? String(data.survey_timestamp) : false
+        survey_timestamp: data.survey_clicked ? String(data.survey_timestamp) : 'N/A'
     };
 }
 
