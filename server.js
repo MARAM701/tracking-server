@@ -68,7 +68,7 @@ function calculateDecisionTime(iconTimestamp, decisionTimestamp) {
     try {
         const startTime = new Date(iconTimestamp).getTime();
         const endTime = new Date(decisionTimestamp).getTime();
-        return ((endTime - startTime) / 1000).toFixed(2);
+        return ((endTime - startTime) / 1000);
     } catch (error) {
         console.error('Error calculating decision time:', error);
         return null;
