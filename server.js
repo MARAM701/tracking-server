@@ -250,7 +250,7 @@ function validateTrackingData(data) {
         permission_decision: String(data.permission_decision),
         decision_timestamp: String(data.decision_timestamp), 
         decision_time_taken_sec: decisionTime,
-        survey_clicked: Boolean(data.survey_clicked),
+        survey_clicked: data.survey_clicked ? 'true' : 'N/A',
         survey_timestamp: data.survey_clicked ? String(data.survey_timestamp) : 'N/A'
     };
 }
