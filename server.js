@@ -55,8 +55,7 @@ app.use(morgan(':method :url :status :response-time ms'));
 
 // CSV Configuration
 const CSV_HEADERS = [
-    { id: 'session_id', title: 'Session_ID' }, 
-    { id: 'experiment_run_id', title: 'Experiment_Run_ID' },
+    { id: 'session_id', title: 'Session_ID' },
     { id: 'user_id', title: 'User_ID' },
     { id: 'ip_address', title: 'IP_Address' },
     { id: 'browser', title: 'Browser' },
@@ -183,11 +182,6 @@ function validateTrackingData(data) {
         errors.push('Session ID is required');
     } else if (!/^session_\d+_[a-zA-Z0-9]+$/.test(data.session_id)) {
         errors.push('Invalid Session ID format');
-    } 
-    if (!data.experiment_run_id) {
-        errors.push('Experiment Run ID is required');
-    } else if (!/^run_\d+_[a-zA-Z0-9]+$/.test(data.experiment_run_id)) {
-        errors.push('Invalid Experiment Run ID format');
     }
 
     if (!data.user_id) {
@@ -244,8 +238,7 @@ function validateTrackingData(data) {
     }
     const decisionTime = calculateDecisionTime(data.icon_timestamp, data.decision_timestamp);
     return {
-        session_id: String(data.session_id), 
-        experiment_run_id: String(data.experiment_run_id),
+        session_id: String(data.session_id),
         user_id: String(data.user_id),
         ip_address: String(data.ip_address).slice(0, 45),
         browser: String(data.browser),
@@ -293,8 +286,7 @@ app.get('/data', async (req, res) => {
 app.post('/track', async (req, res) => {
     try {
         console.log('Received tracking request:', {
-            session_id: req.body.session_id, 
-            experiment_run_id: req.body.experiment_run_id,
+            session_id: req.body.session_id,
             user_id: req.body.user_id,
             ip_address: req.body.ip_address,
             browser: req.body.browser,
