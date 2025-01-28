@@ -2,3 +2,4 @@ Session_ID,Experiment_Run_ID,User_ID,IP_Address,Country,Browser,Operating_System
 
 session_1737904285022_rg4biupbt,run_1738051023747_maj5ztkcl,user_1737294572982_e61b16y07,unknown,unknown,Chrome 131.0.0.0,MacOS,Desktop,Agree,2025-01-28T07:57:06.235Z,2025-01-28T07:57:08.115Z,dismiss,2025-01-28T07:57:08.930Z,0.815,N/A,N/A
 session_1737904285022_rg4biupbt,run_1738051023747_maj5ztkcl,user_1737294572982_e61b16y07,unknown,unknown,Chrome 131.0.0.0,MacOS,Desktop,Agree,2025-01-28T07:57:06.235Z,2025-01-28T07:57:08.115Z,dismiss,2025-01-28T07:57:08.930Z,0.815,true,2025-01-28T07:57:14.257Z
+session_1738052643080_3rqtni36v,run_1738052643080_o01df9aye,user_1737294572982_e61b16y07,109.83.19.152,Saudi Arabia,Chrome 131.0.0.0,MacOS,Desktop,Agree,2025-01-28T08:24:08.147Z,2025-01-28T08:24:10.431Z,allow,2025-01-28T08:24:11.626Z,1.195,N/A,N/A
