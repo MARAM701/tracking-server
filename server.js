@@ -58,7 +58,8 @@ const CSV_HEADERS = [
     { id: 'session_id', title: 'Session_ID' }, 
     { id: 'experiment_run_id', title: 'Experiment_Run_ID' },
     { id: 'user_id', title: 'User_ID' },
-    { id: 'ip_address', title: 'IP_Address' },
+    { id: 'ip_address', title: 'IP_Address' }, 
+    { id: 'country', title: 'Country' },  // Add this line
     { id: 'browser', title: 'Browser' },
     { id: 'operating_system', title: 'Operating_System' },
     { id: 'device_type', title: 'Device_Type' },
@@ -201,6 +202,12 @@ function validateTrackingData(data) {
         errors.push('IP address is required');
     } else if (data.ip_address.length > 45) {
         errors.push('IP address too long');
+    }  
+    
+    if (!data.country) {
+        errors.push('Country information is required');
+    } else if (typeof data.country !== 'string') {
+        errors.push('Country must be a string');
     }
 
     if (!data.browser) {
@@ -248,7 +255,8 @@ function validateTrackingData(data) {
         session_id: String(data.session_id), 
         experiment_run_id: String(data.experiment_run_id),
         user_id: String(data.user_id),
-        ip_address: String(data.ip_address).slice(0, 45),
+        ip_address: String(data.ip_address).slice(0, 45), 
+        country: String(data.country),  // Add this line
         browser: String(data.browser),
         operating_system: String(data.operating_system),
         device_type: String(data.device_type),
@@ -296,7 +304,8 @@ app.post('/track', async (req, res) => {
         console.log('Received tracking request:', {
             session_id: req.body.session_id,
             user_id: req.body.user_id,
-            ip_address: req.body.ip_address,
+            ip_address: req.body.ip_address, 
+            country: req.body.country,  // Add this line
             browser: req.body.browser,
             operating_system: req.body.operating_system,
             device_type: req.body.device_type,
