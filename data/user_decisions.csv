@@ -1,7 +1,0 @@
-Session_ID,Experiment_Run_ID,User_ID,IP_Address,Country,Browser,Operating_System,Device_Type,Consent_Decision,Consent_Timestamp,Icon_Timestamp,Permission_Decision,Decision_Timestamp,Decision_Time_Taken_Sec,Survey_Clicked,Survey_Timestamp
-
-session_1737904285022_rg4biupbt,run_1738051023747_maj5ztkcl,user_1737294572982_e61b16y07,unknown,unknown,Chrome 131.0.0.0,MacOS,Desktop,Agree,2025-01-28T07:57:06.235Z,2025-01-28T07:57:08.115Z,dismiss,2025-01-28T07:57:08.930Z,0.815,N/A,N/A
-session_1737904285022_rg4biupbt,run_1738051023747_maj5ztkcl,user_1737294572982_e61b16y07,unknown,unknown,Chrome 131.0.0.0,MacOS,Desktop,Agree,2025-01-28T07:57:06.235Z,2025-01-28T07:57:08.115Z,dismiss,2025-01-28T07:57:08.930Z,0.815,true,2025-01-28T07:57:14.257Z
-session_1738052643080_3rqtni36v,run_1738052643080_o01df9aye,user_1737294572982_e61b16y07,109.83.19.152,Saudi Arabia,Chrome 131.0.0.0,MacOS,Desktop,Agree,2025-01-28T08:24:08.147Z,2025-01-28T08:24:10.431Z,allow,2025-01-28T08:24:11.626Z,1.195,N/A,N/A
-session_1738052643080_3rqtni36v,run_1738052643080_o01df9aye,user_1737294572982_e61b16y07,109.83.19.152,Saudi Arabia,Chrome 131.0.0.0,MacOS,Desktop,Agree,2025-01-28T08:24:08.147Z,2025-01-28T08:24:10.431Z,allow,2025-01-28T08:24:11.626Z,1.195,true,2025-01-28T08:24:18.361Z
-session_1738052643080_3rqtni36v,run_1738052771481_7iwlnccyw,user_1737294572982_e61b16y07,109.83.19.152,Saudi Arabia,Chrome 131.0.0.0,MacOS,Desktop,Agree,2025-01-28T08:26:14.539Z,2025-01-28T08:26:16.661Z,block,2025-01-28T08:26:17.921Z,1.26,true,2025-01-28T08:26:48.274Z
