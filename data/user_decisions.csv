@@ -1,3 +1,4 @@
 Session_ID,Experiment_Run_ID,User_ID,IP_Address,Country,Browser,Operating_System,Device_Type,Consent_Decision,Consent_Timestamp,Icon_Timestamp,Permission_Decision,Decision_Timestamp,Decision_Time_Taken_Sec,Survey_Clicked,Survey_Timestamp
 
 session_1738082340484_j9t4v6ofx,run_1738083035892_vh35d8ja5,user_1738082340483_q7sm36f0d,107.3.188.75,United States,Chrome 132.0.0.0,MacOS,Desktop,Agree,2025-01-28T16:50:39.173Z,2025-01-28T17:54:41.518Z,allow,2025-01-28T17:54:56.834Z,15.316,N/A,N/A
+session_1738082340484_j9t4v6ofx,run_1738083035892_vh35d8ja5,user_1738082340483_q7sm36f0d,107.3.188.75,United States,Chrome 132.0.0.0,MacOS,Desktop,Agree,2025-01-28T16:50:39.173Z,2025-01-28T17:54:41.518Z,allow,2025-01-28T17:54:56.834Z,15.316,true,2025-01-28T17:56:02.410Z
