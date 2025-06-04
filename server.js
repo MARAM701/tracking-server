@@ -2,15 +2,16 @@ const express = require('express');
 const cors = require('cors');
 const fs = require('fs').promises;
 const path = require('path');
-const createCsvWriter = require('csv-writer').createObjectCsvWriter;
+//const createCsvWriter = require('csv-writer').createObjectCsvWriter;
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
-const { Octokit } = require('@octokit/rest');
+const { Octokit } = require('@octokit/rest'); 
+const { Pool } = require('pg'); // <-- NEW: PostgreSQL client
 
 // Configuration
 const CONFIG = {
     PORT: process.env.PORT || 3000,
-    CSV_PATH: path.join(__dirname, 'data', 'user_decisions.csv'),
+     // CSV_PATH: path.join(__dirname, 'data', 'user_decisions.csv'),
     LOG_PATH: path.join(__dirname, 'logs'),
     MAX_REQUEST_SIZE: '1mb',
     CORS_ORIGINS: [
@@ -25,6 +26,14 @@ const CONFIG = {
         REPO: process.env.GITHUB_REPO,
         BRANCH: process.env.GITHUB_BRANCH,
         FILE_PATH: process.env.CSV_FILE_PATH
+    }, 
+        DB: { // <-- NEW: Add your DB config here
+        user: process.env.DB_USER || 'quicktaxi_user',
+        host: process.env.DB_HOST || 'dpg-d0ve6ufdiees73cq7lh0-a.oregon-postgres.render.com',
+        database: process.env.DB_NAME || 'quicktaxi',
+        password: process.env.DB_PASS || 'yyrTNOp9Mr8ggesZrYW62h1zrEUX9CdR',
+        port: process.env.DB_PORT || 5432,
+        ssl: { rejectUnauthorized: false }
     }
 };
 
@@ -53,7 +62,8 @@ app.use('/track', limiter);
 // Request logging
 app.use(morgan(':method :url :status :response-time ms'));
 
-// CSV Configuration
+// CSV Configuration 
+/*
 const CSV_HEADERS = [
     { id: 'session_id', title: 'Session_ID' }, 
     { id: 'experiment_run_id', title: 'Experiment_Run_ID' },
@@ -71,7 +81,8 @@ const CSV_HEADERS = [
     { id: 'decision_time_taken_sec', title: 'Decision_Time_Taken_Sec' },
     { id: 'survey_clicked', title: 'Survey_Clicked' },
     { id: 'survey_timestamp', title: 'Survey_Timestamp' }
-];
+]; 
+*/
 function calculateDecisionTime(iconTimestamp, decisionTimestamp) {
     try {
         const startTime = new Date(iconTimestamp).getTime();
@@ -81,8 +92,9 @@ function calculateDecisionTime(iconTimestamp, decisionTimestamp) {
         console.error('Error calculating decision time:', error);
         return null;
     }
-}
-// Function to create new CSV writer
+} 
+/*
+// Function to create new CSV writer 
 function createNewCsvWriter(append = true) {
     return createCsvWriter({
         path: CONFIG.CSV_PATH,
@@ -118,7 +130,10 @@ async function ensureDirectories() {
         throw error;
     }
 }
-
+*/ 
+// Initialize PostgreSQL connection pool
+const pool = new Pool(CONFIG.DB); 
+/*
 // GitHub upload function
 async function uploadCSVToGitHub() {
     try {
@@ -157,6 +172,7 @@ async function uploadCSVToGitHub() {
         await logError(error, null, { phase: 'github upload' });
     }
 }
+*/ 
 
 // Error logging function
 async function logError(error, requestData = null, additionalInfo = {}) {
@@ -270,7 +286,7 @@ function validateTrackingData(data) {
         survey_timestamp: data.survey_clicked ? String(data.survey_timestamp) : 'N/A'
     };
 }
-
+/*
 // Endpoints
 app.get('/data', async (req, res) => {
     try {
@@ -298,6 +314,22 @@ app.get('/data', async (req, res) => {
         });
     }
 });
+*/ 
+app.get('/data', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT * FROM user_decisions ORDER BY decision_timestamp DESC'); // change table name if needed
+        res.status(200).json({
+            success: true,
+            data: result.rows
+        });
+    } catch (error) {
+        await logError(error, null, { endpoint: '/data' });
+        res.status(500).json({
+            success: false,
+            error: 'Failed to read data from database'
+        });
+    }
+});
 
 app.post('/track', async (req, res) => {
     try {
@@ -318,7 +350,9 @@ app.post('/track', async (req, res) => {
             survey_timestamp: req.body.survey_timestamp
         });
 
-        const validatedData = validateTrackingData(req.body);
+        const validatedData = validateTrackingData(req.body); 
+        // --- REMOVED: CSV and GitHub logic
+        /*
 
         let retries = 3;
         let success = false;
@@ -333,13 +367,42 @@ app.post('/track', async (req, res) => {
             }
         }
 
-        await uploadCSVToGitHub();
+        await uploadCSVToGitHub(); 
+        */ 
+                // --- NEW: Insert into PostgreSQL
+        const insertQuery = `
+            INSERT INTO user_decisions (
+                session_id, experiment_run_id, user_id, ip_address, country,
+                browser, operating_system, device_type, consent_decision, consent_timestamp,
+                icon_timestamp, permission_decision, decision_timestamp, decision_time_taken_sec,
+                survey_clicked, survey_timestamp
+            ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
+        `;
+        const values = [
+            validatedData.session_id,
+            validatedData.experiment_run_id,
+            validatedData.user_id,
+            validatedData.ip_address,
+            validatedData.country,
+            validatedData.browser,
+            validatedData.operating_system,
+            validatedData.device_type,
+            validatedData.consent_decision,
+            validatedData.consent_timestamp,
+            validatedData.icon_timestamp,
+            validatedData.permission_decision,
+            validatedData.decision_timestamp,
+            validatedData.decision_time_taken_sec,
+            validatedData.survey_clicked,
+            validatedData.survey_timestamp
+        ];
+        await pool.query(insertQuery, values);
 
         console.log('Tracking data recorded successfully:', validatedData);
 
         res.status(200).json({
             success: true,
-            message: 'Decision recorded and uploaded to GitHub successfully'
+            message: 'Decision recorded successfully'
         });
 
     } catch (error) {
@@ -360,19 +423,21 @@ app.post('/track', async (req, res) => {
 
 app.get('/health', async (req, res) => {
     try {
-        await fs.access(CONFIG.CSV_PATH);
+        // await fs.access(CONFIG.CSV_PATH);
+        // NEW: Test database connection
+        await pool.query('SELECT 1'); 
         
         res.status(200).json({
             status: 'healthy',
             timestamp: new Date().toISOString(),
-            csvPath: CONFIG.CSV_PATH,
+            // csvPath: CONFIG.CSV_PATH,
             environment: process.env.NODE_ENV || 'development'
         });
     } catch (error) {
         await logError(error, null, { endpoint: '/health' });
         res.status(500).json({
             status: 'unhealthy',
-            error: 'Could not access required files'
+            error: 'Could not access PostgreSQL database'
         });
     }
 });
@@ -412,14 +477,14 @@ process.on('uncaughtException', async (error) => {
 // Server initialization
 async function startServer() {
     try {
-        await ensureDirectories();
+        // await ensureDirectories();
 
         const server = app.listen(CONFIG.PORT, () => {
             console.log('='.repeat(50));
             console.log(`Server initialized successfully:`);
             console.log(`- Port: ${CONFIG.PORT}`);
             console.log(`- Environment: ${process.env.NODE_ENV || 'development'}`);
-            console.log(`- CSV Path: ${CONFIG.CSV_PATH}`);
+            // console.log(`- CSV Path: ${CONFIG.CSV_PATH}`);
             console.log(`- Logs Path: ${CONFIG.LOG_PATH}`);
             console.log('='.repeat(50));
         });
