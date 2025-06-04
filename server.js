@@ -132,7 +132,9 @@ async function ensureDirectories() {
 }
 */ 
 // Initialize PostgreSQL connection pool
-const pool = new Pool(CONFIG.DB); 
+const pool = new Pool(CONFIG.DB);  
+// Add this line to create logs directory
+fs.mkdir(CONFIG.LOG_PATH, { recursive: true }).catch(() => {});
 /*
 // GitHub upload function
 async function uploadCSVToGitHub() {
