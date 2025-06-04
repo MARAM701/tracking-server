@@ -270,7 +270,8 @@ function validateTrackingData(data) {
     }
     const decisionTime = calculateDecisionTime(data.icon_timestamp, data.decision_timestamp);
     return {
-        session_id: String(data.session_id), 
+        session_id: String(data.session_id),  
+        user_step: data.user_step || 1,  // ADD THIS LINE
         experiment_run_id: String(data.experiment_run_id),
         user_id: String(data.user_id),
         ip_address: String(data.ip_address).slice(0, 45), 
@@ -336,7 +337,8 @@ app.get('/data', async (req, res) => {
 app.post('/track', async (req, res) => {
     try {
         console.log('Received tracking request:', {
-            session_id: req.body.session_id,
+            session_id: req.body.session_id, 
+            user_step: req.body.user_step,  // ADD THIS LINE
             user_id: req.body.user_id,
             ip_address: req.body.ip_address, 
             country: req.body.country,  // Add this line
@@ -374,14 +376,15 @@ app.post('/track', async (req, res) => {
                 // --- NEW: Insert into PostgreSQL
         const insertQuery = `
             INSERT INTO user_decisions (
-                session_id, experiment_run_id, user_id, ip_address, country,
+                session_id, user_step, experiment_run_id, user_id, ip_address, country,
                 browser, operating_system, device_type, consent_decision, consent_timestamp,
                 icon_timestamp, permission_decision, decision_timestamp, decision_time_taken_sec,
                 survey_clicked, survey_timestamp
-            ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
+            ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)
         `;
         const values = [
-            validatedData.session_id,
+            validatedData.session_id, 
+            validatedData.user_step,  // ADD THIS LINE (becomes value $2)
             validatedData.experiment_run_id,
             validatedData.user_id,
             validatedData.ip_address,
