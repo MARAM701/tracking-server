@@ -31,7 +31,7 @@ const CONFIG = {
         user: process.env.DB_USER || 'quicktaxi_user',
         host: process.env.DB_HOST || 'dpg-d0ve6ufdiees73cq7lh0-a.oregon-postgres.render.com',
         database: process.env.DB_NAME || 'quicktaxi',
-        password: process.env.DB_PASS || 'yyrTNOp9Mr8ggesZrYW62h1zrEUX9CdR',
+        password: process.env.DB_PASS,
         port: process.env.DB_PORT || 5432,
         ssl: { rejectUnauthorized: false }
     }
