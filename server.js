@@ -6,8 +6,12 @@ const path = require('path');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
 const { Octokit } = require('@octokit/rest'); 
-const { Pool } = require('pg'); // <-- NEW: PostgreSQL client
-
+const { Pool } = require('pg'); // <-- NEW: PostgreSQL client 
+const required = ["DB_USER", "DB_HOST", "DB_NAME", "DB_PASS", "DB_PORT"];
+const missing = required.filter((k) => !process.env[k]);
+if (missing.length) {
+  throw new Error("Missing env vars: " + missing.join(", "));
+}
 // Configuration
 const CONFIG = {
     PORT: process.env.PORT || 3000,
@@ -28,14 +32,22 @@ const CONFIG = {
         FILE_PATH: process.env.CSV_FILE_PATH
     }, 
         DB: { // <-- NEW: Add your DB config here
-        user: process.env.DB_USER || 'quicktaxi_user',
-        host: process.env.DB_HOST || 'dpg-d0ve6ufdiees73cq7lh0-a.oregon-postgres.render.com',
-        database: process.env.DB_NAME || 'quicktaxi',
+        user: process.env.DB_USER ,
+        host: process.env.DB_HOST ,
+        database: process.env.DB_NAME ,
         password: process.env.DB_PASS,
-        port: process.env.DB_PORT || 5432,
+        port: Number(process.env.DB_PORT),
         ssl: { rejectUnauthorized: false }
     }
-};
+}; 
+console.log("DB CONFIG (no password):", {
+  host: CONFIG.DB.host,
+  port: CONFIG.DB.port,
+  database: CONFIG.DB.database,
+  user: CONFIG.DB.user,
+  ssl: !!CONFIG.DB.ssl
+});
+
 
 // Initialize Express app
 const app = express();
