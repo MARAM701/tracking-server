@@ -1,24 +1,19 @@
 {
-  "name": "server",
+  "name": "tracking-server",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js"
   },
-  "keywords": [],
-  "author": "",
   "license": "ISC",
   "dependencies": {
+    "@octokit/rest": "^20.0.1",
     "body-parser": "^1.20.3",
     "cors": "^2.8.5",
-    "csv-writer": "^1.6.0",
     "express": "^4.21.2",
     "express-rate-limit": "^7.5.0",
     "morgan": "^1.10.0",
-    "uuid": "^11.0.3", 
-    "@octokit/rest": "^20.0.1", 
-    "pg": "^8.11.3"
-  },
-  "description": ""
+    "pg": "^8.11.3",
+    "uuid": "^11.0.3"
+  }
 }
