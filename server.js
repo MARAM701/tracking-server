@@ -407,7 +407,7 @@ process.on('uncaughtException', async (error) => {
 
 async function startServer() {
   try {
-    const server = app.listen(CONFIG.PORT, () => {
+    const server = app.listen(CONFIG.PORT, '0.0.0.0', () => {
       console.log('='.repeat(50));
       console.log(`Server initialized successfully:`);
       console.log(`- Port: ${CONFIG.PORT}`);
