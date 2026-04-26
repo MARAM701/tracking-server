@@ -73,7 +73,8 @@ const VALID_EVENT_TYPES = [
   'permission_dialog_shown',
   'permission_decision',
   'book_now_clicked',
-  'survey_link_clicked'
+  'survey_link_clicked',
+  'manual_pickup_entered'
 ];
 
 // ─── Helpers ─────────────────────────────────────────────────────────
@@ -198,6 +199,30 @@ function validatePayload(eventType, rawPayload) {
       const cleaned = {};
       if (payload.survey_url !== undefined) {
         cleaned.survey_url = String(payload.survey_url).trim();
+      }
+      return cleaned;
+    }
+
+    case 'manual_pickup_entered': {
+      const cleaned = {};
+      const entryMethod = toNullableText(payload.entry_method);
+      if (entryMethod) {
+        const validMethods = ['autocomplete', 'typed'];
+        if (!validMethods.includes(entryMethod)) {
+          throw new ValidationError(
+            'payload.entry_method must be "autocomplete" or "typed"'
+          );
+        }
+        cleaned.entry_method = entryMethod;
+      }
+      if (payload.pickup_present !== undefined) {
+        const parsed = toStrictBoolean(payload.pickup_present);
+        if (parsed === null) {
+          throw new ValidationError(
+            'payload.pickup_present must be true, false, "true", or "false"'
+          );
+        }
+        cleaned.pickup_present = parsed;
       }
       return cleaned;
     }
